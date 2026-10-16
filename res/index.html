@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAN file exchange</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 24px; color: #222; }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+
+    input[type="text"]:focus,
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #4a90e2;
+      background: #fff;
+    }
+
+    input[type="file"] { cursor: pointer; }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover { background: #3a7bc8; }
+    button:active { background: #2f6ab0; }
+
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      background: #fafafa;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #4a90e2;
+      background: #fff;
+    }
+
+    .files-list {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .files-list li { margin-bottom: 8px; }
+
+    .files-list a {
+      display: block;
+      padding: 10px 12px;
+      background: #f0f6ff;
+      border: 1px solid #d6e4ff;
+      border-radius: 8px;
+      color: #2f6ab0;
+      text-decoration: none;
+      font-size: 1rem;
+      word-break: break-all;
+    }
+
+    .files-list a:hover {
+      background: #e2edff;
+      border-color: #4a90e2;
+    }
+
+    .empty {
+      color: #999;
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Receive</h1>
+
+    <label>Message from server</label>
+    {{if .Text}}
+      <textarea readonly>{{.Text}}</textarea>
+    {{else}}
+      <div class="empty">No message</div>
+    {{end}}
+
+    <label>Files from server</label>
+    {{if .Files}}
+      <ul class="files-list">
+        {{range .Files}}
+          <li><a href="/file/{{. | urlquery}}" download>{{.}}</a></li>
+        {{end}}
+      </ul>
+    {{else}}
+      <div class="empty">No files</div>
+    {{end}}
+  </div>
+
+  <div class="card">
+    <h1>Send</h1>
+    <form action="/submit" method="post" enctype="multipart/form-data">
+      <label for="data">Message to server</label>
+      <input id="data" type="text" name="data" placeholder="Type some text...">
+
+      <label for="files">Files</label>
+      <input id="files" type="file" name="files" multiple>
+
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</body>
+</html>
