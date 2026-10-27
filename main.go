@@ -86,9 +86,9 @@ func runServer(text string, filenames []string, port int) error {
 			if err != nil {
 				panic(err)
 			}
-			io.Copy(dst, src)
-			src.Close()
-			dst.Close()
+			_, _ = io.Copy(dst, src)
+			_ = src.Close()
+			_ = dst.Close()
 			fmt.Printf("saved file as %s", path)
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
