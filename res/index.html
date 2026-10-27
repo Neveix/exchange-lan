@@ -133,10 +133,12 @@
     {{end}}
 
     <label>Files from server</label>
-    {{if .Files}}
+    {{if .UUIDs}}
       <ul class="files-list">
-        {{range .Files}}
-          <li><a href="/file/{{. | urlquery}}" download>{{.}}</a></li>
+        {{range $i, $uuid := .UUIDs}}
+          <li>
+            <a href="/file/{{$uuid | urlquery}}" download>{{index $.Names $i}}</a>
+          </li>
         {{end}}
       </ul>
     {{else}}

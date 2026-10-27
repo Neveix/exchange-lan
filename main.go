@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"text/template"
+	"uuid"
 )
 
 //go:embed res/index.html
@@ -49,21 +50,61 @@ func getExternalIP() (string, error) {
 
 type pageData struct {
 	Text  string
-	Files []string
+	UUIDs []string
+	Names []string
 }
 
 var tmpl = template.Must(template.New("index").Parse(string(indexHTML)))
 
-func runServer(text string, filenames []string, port int) error {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func runServer(text string, paths []string, port int) error {
+	var names []string
+	var UUIDS []string
+	filesMap := map[string]int{}
+	for i, path := range paths {
+		names = append(names, filepath.Base(path))
+		fileUUID := uuid.NewV4().String()
+		filesMap[fileUUID] = i
+		UUIDS = append(UUIDS, fileUUID)
+	}
+
+	http.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
 		data := pageData{
 			Text:  text,
-			Files: filenames,
+			UUIDs: UUIDS,
+			Names: names,
 		}
 		err := tmpl.Execute(w, data)
 		if err != nil {
 			panic(err)
 		}
+	})
+
+	http.HandleFunc("/file/{uuid}", func(w http.ResponseWriter, r *http.Request) {
+		uuid := r.PathValue("uuid")
+		fileIndex, ok := filesMap[uuid]
+		if ok {
+			name := names[fileIndex]
+			path := paths[fileIndex]
+			data, err := os.ReadFile(path)
+			if err != nil {
+				_, err = w.Write([]byte("ReadFile error"))
+				if err != nil {
+					panic(err)
+				}
+			}
+			_, err = w.Write(data)
+			if err != nil {
+				panic(err)
+			}
+			w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", name))
+		} else {
+			w.WriteHeader(404)
+			_, err := w.Write([]byte("No such file found"))
+			if err != nil {
+				panic(err)
+			}
+		}
+		_ = fileIndex
 	})
 
 	http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
@@ -126,8 +167,16 @@ func main() {
 		*text = string(stdinText)
 	}
 
-	fmt.Println(filenames)
-	err := runServer(*text, filenames, *port)
+	var absFilenames []string
+	for _, filename := range filenames {
+		absFilename, err := filepath.Abs(filename)
+		if err != nil {
+			panic(err)
+		}
+		absFilenames = append(absFilenames, absFilename)
+	}
+	fmt.Println(absFilenames)
+	err := runServer(*text, absFilenames, *port)
 	if err != nil {
 		panic(err)
 	}
