@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,10 +14,8 @@ import (
 	"text/template"
 )
 
-func isTerminal() bool {
-	fi, _ := os.Stdin.Stat()
-	return fi.Mode()&os.ModeCharDevice != 0
-}
+//go:embed res/index.html
+var indexHTML []byte
 
 func getExternalIP() (string, error) {
 	intfs, err := net.Interfaces()
@@ -53,7 +52,7 @@ type pageData struct {
 	Files []string
 }
 
-var tmpl = template.Must(template.ParseFiles("res/index.html"))
+var tmpl = template.Must(template.New("index").Parse(string(indexHTML)))
 
 func runServer(text string, filenames []string, port int) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
